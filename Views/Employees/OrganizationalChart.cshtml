@@ -1,0 +1,1287 @@
+﻿@model IEnumerable<_2.Models.Employee>
+
+
+@{
+    ViewBag.Title = "Sơ Đồ Phân Cấp - CẢNG QUỐC TẾ NGHI SƠN";
+    var totalEmployees = Model.Count();
+    var totalMale = Model.Count(e => e.emp_sex == "Nam");
+    var totalFemale = Model.Count(e => e.emp_sex == "Nữ");
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Phân Cấp - CẢNG QUỐC TẾ NGHI SƠN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.15), transparent 40%), radial-gradient(circle at 80% 30%, rgba(0, 128, 255, 0.15), transparent 45%), radial-gradient(circle at 50% 80%, rgba(140, 0, 255, 0.12), transparent 45%), linear-gradient(135deg, #05070f 0%, #0a0f2c 40%, #020617 100%);
+            color: #eaefff;
+            line-height: 1.5;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            /*-webkit-background-clip: text;*/
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+            color: #f8f9fa;
+        }
+
+        .mobile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .mobile-stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.8rem 1.2rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+            .mobile-stat:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .mobile-stat .number {
+                font-weight: bold;
+                font-size: 1.2rem;
+                color: #ffd93d;
+            }
+
+        .controls {
+            padding: 1rem;
+            background: linear-gradient(180deg, rgba(10,15,40,0.95), rgba(15,25,60,0.9));
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem;
+            width: 100%;
+        }
+
+        .controls::-webkit-scrollbar {
+            display: none;
+        }
+
+        .control-btn {
+            padding: 0.7rem 1.2rem;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+        }
+
+            .control-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
+            }
+
+            .control-btn:active {
+                transform: scale(0.98);
+            }
+
+            .control-btn.expand-all {
+                background: linear-gradient(45deg, #00b09b, #96c93d);
+                box-shadow: 0 4px 15px rgba(0, 176, 155, 0.3);
+            }
+
+            .control-btn.collapse-all {
+                background: linear-gradient(45deg, #ff416c, #ff4b2b);
+                box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+            }
+
+            .control-btn.reset {
+                background: linear-gradient(45deg, #8e2de2, #4a00e0);
+                box-shadow: 0 4px 15px rgba(142, 45, 226, 0.3);
+            }
+
+        .search-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 0.4rem 0.8rem 0.7rem;
+            display: flex; /* 👈 */
+            justify-content: center;
+        }
+
+            .search-container input {
+                width: 100%;
+                padding: 0.55rem 0.8rem;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(0, 255, 255, 0.25);
+                color: white;
+            }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            align-content: center;
+        }
+
+            .search-box input {
+                width: 100%;
+                padding: 0.9rem 1rem 0.9rem 3rem;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 12px;
+                font-size: 1rem;
+                background: rgba(0, 0, 0, 0.4);
+                border: 1px solid rgba(0, 255, 255, 0.35);
+                color: #eaefff;
+                transition: all 0.3s ease;
+            }
+
+                .search-box input:focus {
+                    border-color: #6a11cb;
+                    outline: none;
+                    border-color: #00f7ff;
+                    box-shadow: 0 0 0 3px rgba(0, 247, 255, 0.25);
+                }
+
+                .search-box input::placeholder {
+                    color: rgba(255, 255, 255, 0.6);
+                }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .org-chart-container {
+            padding-top: 0.5rem;
+            min-height: calc(100vh - 180px);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .org-chart {
+            min-width: 100%;
+            position: relative;
+            padding: 1.5rem 0 1.5rem 0;
+            margin-left: 0 !important;
+            padding-left: 2px;
+        }
+
+        /* Tree styling */
+        .tree {
+            list-style-type: none;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            position: relative;
+        }
+
+        .tree-node {
+            margin: 0.6rem 0;
+            position: relative;
+            padding-left: 0.9rem;
+        }
+
+            /* Connection lines */
+            .tree-node::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 14px;
+                border-left: 2px solid rgba(255, 255, 255, 0.45);
+                border-bottom: 2px solid rgba(255, 255, 255, 0.45);
+                border-bottom-left-radius: 10px;
+            }
+
+        .node-content {
+            backdrop-filter: blur(16px);
+            box-shadow: 0 0 0 1px rgba(0, 255, 255, 0.12), 0 10px 30px rgba(0, 0, 0, 0.35);
+            border-radius: 15px;
+            padding: 1rem;
+            border: 2px solid transparent;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .node-content.ceo {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            border: 2px solid #FFD700;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .node-content.director {
+            background: linear-gradient(135deg, #36D1DC 0%, #5B86E5 100%);
+            color: white;
+            border: 2px solid #36D1DC;
+            box-shadow: 0 6px 20px rgba(54, 209, 220, 0.3);
+        }
+
+        .node-content.manager {
+            background: linear-gradient(135deg, #FF5F6D 0%, #FFC371 100%);
+            color: white;
+            border: 2px solid #FF5F6D;
+            box-shadow: 0 6px 20px rgba(255, 95, 109, 0.3);
+        }
+
+        .node-content.supervisor {
+            background: linear-gradient(135deg, #834d9b 0%, #d04ed6 100%);
+            color: white;
+            border: 2px solid #834d9b;
+            box-shadow: 0 6px 20px rgba(131, 77, 155, 0.3);
+        }
+
+        .node-content.specialist {
+            background: linear-gradient(135deg, #4CA1AF 0%, #C4E0E5 100%);
+            color: white;
+            border: 2px solid #4CA1AF;
+            box-shadow: 0 6px 20px rgba(76, 161, 175, 0.3);
+        }
+
+        .node-content.employee {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.8rem;
+        }
+
+            .node-content.employee.male {
+                border-left: 4px solid #36D1DC;
+            }
+
+            .node-content.employee.female {
+                border-left: 4px solid #FF5F6D;
+            }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .node-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-right: 0.8rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .node-content.ceo .node-avatar {
+            background: rgba(0, 0, 0, 0.2);
+            color: #FFD700;
+        }
+
+        .node-content.director .node-avatar {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .node-content.manager .node-avatar {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .node-content.supervisor .node-avatar {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .node-content.employee.male .node-avatar {
+            background: #36D1DC;
+            color: white;
+        }
+
+        .node-content.employee.female .node-avatar {
+            background: #FF5F6D;
+            color: white;
+        }
+
+        .node-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .node-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .node-content.ceo .node-name,
+        .node-content.director .node-name,
+        .node-content.manager .node-name,
+        .node-content.supervisor .node-name,
+        .node-content.specialist .node-name {
+            color: white;
+        }
+
+        .node-position {
+            font-size: 0.85rem;
+            line-height: 1.3;
+            margin-bottom: 0.3rem;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: #666;
+        }
+
+        .node-content.ceo .node-position,
+        .node-content.director .node-position,
+        .node-content.manager .node-position,
+        .node-content.supervisor .node-position,
+        .node-content.specialist .node-position {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .node-id {
+            font-size: 0.75rem;
+            color: #888;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .node-content.ceo .node-id,
+        .node-content.director .node-id,
+        .node-content.manager .node-id,
+        .node-content.supervisor .node-id,
+        .node-content.specialist .node-id {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+            z-index: 3;
+            font-size: 1rem;
+        }
+
+            .toggle-btn:hover {
+                background: rgba(0, 0, 0, 0.4);
+                transform: scale(1.1);
+            }
+
+            .toggle-btn.collapsed::after {
+                content: '+';
+            }
+
+            .toggle-btn.expanded::after {
+                content: '−';
+            }
+
+        .children {
+            list-style-type: none;
+            padding-left: 0.8rem;
+            margin-left: 6px;
+            margin-top: 0.8rem;
+            position: relative;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tree-node.expanded > .children {
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+        }
+
+        .highlight {
+            animation: highlightPulse 1.5s infinite;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        @@keyframes highlightPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 215, 0, 0), 0 0 20px rgba(255, 215, 0, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0), 0 0 20px rgba(255, 215, 0, 0.1);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 1.5rem;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            font-size: 0.9rem;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #6a11cb;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .employee-details-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 350px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.2);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1001;
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+            .employee-details-panel.active {
+                right: 0;
+            }
+
+        .panel-header {
+            padding: 1.5rem;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .panel-header h3 {
+                margin: 0;
+                font-size: 1.2rem;
+            }
+
+        .close-panel {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .panel-content {
+            padding: 1.5rem;
+            overflow-y: auto;
+            height: calc(100% - 70px);
+        }
+
+        @@media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100vw;
+                max-width: 100vw;
+            }
+
+            .tree {
+                padding-left: 0 !important;
+                margin-left: 0 !important;
+            }
+
+            .tree-node {
+                padding-left: 0.6rem;
+            }
+
+            .node-content {
+                margin-left: 6px;
+                max-width: calc(100vw - 20px);
+            }
+
+            .controls {
+                padding: 0.5rem;
+                gap: 0.4rem;
+            }
+
+
+            .control-btn {
+                padding: 0.45rem 0.7rem;
+                font-size: 0.75rem;
+                border-radius: 8px;
+                box-shadow: none;
+            }
+
+            .toggle-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 0.8rem;
+                right: 0.6rem;
+                top: 0.6rem;
+            }
+
+            .node-content {
+                padding: 0.7rem;
+                border-radius: 12px;
+            }
+
+            .node-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+                margin-right: 0.6rem;
+            }
+
+            .node-name {
+                font-size: 0.9rem;
+            }
+
+            .node-position {
+                font-size: 0.75rem;
+            }
+
+            .node-id {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="controls">
+            <div class="controls-row">
+                <button class="control-btn expand-all" id="expandAll">Mở rộng tất cả</button>
+                <button class="control-btn collapse-all" id="collapseAll">Thu gọn tất cả</button>
+                <button class="control-btn reset" id="resetView">Thiết lập lại</button>
+
+            </div>
+            <div class="row">
+                <div class="controls-row">
+                    <a href="@Url.Action("Create", "Employees")"
+                       class="control-btn"
+                       style="background: linear-gradient(45deg, #ff9800, #ff5722); text-decoration:none;">
+                        <i class="fas fa-plus-circle"></i> Thêm nhân viên mới
+                    </a>
+                </div>
+            </div>
+            <div class="row" style="align-items:center">
+                <div class="search-box">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" id="searchInput" placeholder="Tìm theo tên, ID, chức vụ...">
+                </div>
+            </div>
+
+        </div>
+        <div class="org-chart-container">
+            <div class="org-chart" id="orgChart">
+                <ul class="tree" id="orgTree">
+                </ul>
+            </div>
+        </div>
+
+        <div class="employee-details-panel" id="detailsPanel">
+            <div class="panel-header">
+                <h3>Thông tin chi tiết</h3>
+                <button class="close-panel" id="closePanel">×</button>
+            </div>
+            <div class="panel-content">
+                <div id="employeeDetails">
+                    <p>Chọn một nhân viên để xem thông tin</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Đang tải dữ liệu...</p>
+    </div>
+
+    @section scripts {
+        <script>
+    let allEmployees = [];
+    let orgChartData = null;
+    let searchTimeout = null;
+        const employeeDetailsBaseUrl = '@Url.Action("Details", "Employees")';
+    // load
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeApplication();
+    });
+
+    //khởi tạo ứng dụng
+    function initializeApplication() {
+        showLoading();
+
+        // dữ liệu từ server
+        fetchEmployees()
+            .then(data => {
+                allEmployees = data;
+                orgChartData = buildOrgHierarchy(data);
+                renderOrgChart(orgChartData);
+                initializeEventListeners();
+                hideLoading();
+                showNotification('Đã tải dữ liệu ' + data.length + ' nhân viên');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hideLoading();
+                showNotification('Lỗi tải dữ liệu: ' + error.message, 'error');
+            });
+    }
+
+    // dữ liệu nhân viên từ server
+    async function fetchEmployees() {
+        try {
+            const response = await fetch('@Url.Action("GetEmployeesJson", "Employees")');
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    //cấu trúc phân cấp
+    function buildOrgHierarchy(employees) {
+        // tìm chủ tịch (không có supervisor_id hoặc là null)
+        let ceo = employees.find(e => !e.supervisor_id || e.supervisor_id === '');
+
+        if (!ceo) {
+            // tìm người có chức vụ cao nhất
+            ceo = employees.find(e => e.emp_position.includes("Chủ Tịch"));
+            if (!ceo) ceo = employees[0];
+        }
+
+        // xây dựng cây
+        function buildTree(managerId) {
+            const subordinates = employees.filter(e => e.supervisor_id === managerId);
+
+            return subordinates.map(sub => ({
+                id: sub.emp_id,
+                name: sub.emp_name,
+                gender: sub.emp_sex,
+                position: sub.job_position,
+                jobPosition: sub.emp_position,
+                type: getNodeType(sub.emp_position),
+                children: buildTree(sub.emp_id)
+            }));
+        }
+
+        return {
+            id: ceo.emp_id,
+            name: ceo.emp_name,
+            gender: ceo.emp_sex,
+            position: ceo.emp_position,
+            jobPosition: ceo.job_position,
+            type: 'ceo',
+            children: buildTree(ceo.emp_id)
+        };
+    }
+
+    // xác định loại node
+    function getNodeType(position) {
+        const pos = (position || '').toLowerCase();
+
+        if (pos.includes('chủ tịch') || pos.includes('tổng giám đốc')) return 'ceo';
+        if (pos.includes('phó tổng') || pos.includes('giám đốc')) return 'director';
+        if (pos.includes('trưởng phòng') || pos.includes('quản đốc')|| pos.includes('trưởng bộ phận')) return 'manager';
+        if (pos.includes('trưởng ca') || pos.includes('tổ trưởng') || pos.includes('đội trưởng')) return 'supervisor';
+        if (pos.includes('chuyên viên')) return 'specialist';
+        return 'employee';
+    }
+
+    // render sơ đồ
+    function renderOrgChart(data) {
+        const orgTree = document.getElementById('orgTree');
+        orgTree.innerHTML = '';
+        orgTree.appendChild(createTreeNode(data, 0));
+    }
+
+    // html cho node-tất cả node có children đều có toggle
+    function createTreeNode(nodeData, level) {
+        const li = document.createElement('li');
+        li.className = 'tree-node';
+        li.dataset.id = nodeData.id;
+        li.dataset.name = nodeData.name.toLowerCase();
+        li.dataset.position = nodeData.position.toLowerCase();
+        li.dataset.gender = nodeData.gender;
+        li.dataset.level = level;
+
+        const nodeContent = document.createElement('div');
+        nodeContent.className = `node-content ${nodeData.type} ${nodeData.gender === 'Nam' ? 'male' : 'female'}`;
+
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'node-avatar';
+        avatar.textContent = getInitials(nodeData.name);
+
+        // Thông tin node
+        const nodeInfo = document.createElement('div');
+        nodeInfo.className = 'node-info';
+
+        const nodeName = document.createElement('div');
+        nodeName.className = 'node-name';
+        nodeName.textContent = nodeData.name;
+
+        const nodePosition = document.createElement('div');
+        nodePosition.className = 'node-position';
+        nodePosition.textContent = nodeData.position;
+
+        const nodeId = document.createElement('div');
+        nodeId.className = 'node-id';
+        nodeId.textContent = `ID: ${nodeData.id}`;
+
+        nodeInfo.appendChild(nodeName);
+        nodeInfo.appendChild(nodePosition);
+        nodeInfo.appendChild(nodeId);
+
+        const nodeHeader = document.createElement('div');
+        nodeHeader.className = 'node-header';
+        nodeHeader.appendChild(avatar);
+        nodeHeader.appendChild(nodeInfo);
+
+        nodeContent.appendChild(nodeHeader);
+
+        // tất cả node có children đều có toggle, không phân biệt type
+        if (nodeData.children && nodeData.children.length > 0) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'toggle-btn collapsed';
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleNode(li);
+            });
+            nodeContent.appendChild(toggleBtn);
+        }
+
+        li.appendChild(nodeContent);
+
+        // Tạo children container
+        if (nodeData.children && nodeData.children.length > 0) {
+            const childrenContainer = document.createElement('ul');
+            childrenContainer.className = 'children';
+
+            nodeData.children.forEach(child => {
+                childrenContainer.appendChild(createTreeNode(child, level + 1));
+            });
+
+            li.appendChild(childrenContainer);
+
+            // Chỉ mở rộng node cấp 0 (CEO) mặc định
+            if (level === 0) {
+                li.classList.add('expanded');
+                const toggleBtn = nodeContent.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.classList.add('expanded');
+                }
+                childrenContainer.style.maxHeight = childrenContainer.scrollHeight + 'px';
+                setTimeout(() => {
+                    childrenContainer.style.maxHeight = 'none';
+                }, 400);
+            } else {
+                li.classList.remove('expanded');
+                childrenContainer.style.maxHeight = '0';
+                const toggleBtn = nodeContent.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('expanded');
+                    toggleBtn.classList.add('collapsed');
+                }
+            }
+        }
+
+        //click để xem chi tiết và highlight
+        nodeContent.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('toggle-btn')) {
+                showEmployeeDetails(nodeData.id);
+                highlightNode(li);
+            }
+        });
+
+        return li;
+    }
+
+    // Lấy chữ cái đầu từ tên
+    function getInitials(name) {
+        if (!name) return 'NN';
+        const nameParts = name.split(' ');
+        if (nameParts.length >= 2) {
+            return (nameParts[nameParts.length - 2].charAt(0) +
+                    nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
+    // hiệu ứng slide
+    function toggleNode(nodeElement) {
+        const toggleBtn = nodeElement.querySelector('.toggle-btn');
+        const children = nodeElement.querySelector('.children');
+
+        if (!children) return;
+
+        if (nodeElement.classList.contains('expanded')) {
+            // Thu gọn
+            children.style.maxHeight = children.scrollHeight + 'px';
+            // Force reflow
+            void children.offsetHeight;
+            children.style.maxHeight = '0';
+
+            setTimeout(() => {
+                nodeElement.classList.remove('expanded');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('expanded');
+                    toggleBtn.classList.add('collapsed');
+                }
+            }, 300);
+        } else {
+            // Mở rộng
+            nodeElement.classList.add('expanded');
+            if (toggleBtn) {
+                toggleBtn.classList.remove('collapsed');
+                toggleBtn.classList.add('expanded');
+            }
+
+            children.style.maxHeight = '0';
+            // Force reflow
+            void children.offsetHeight;
+            children.style.maxHeight = children.scrollHeight + 'px';
+
+            // Sau khi transition, set thành auto cho nội dung động
+            setTimeout(() => {
+                if (children.scrollHeight > 0) {
+                    children.style.maxHeight = 'none';
+                }
+            }, 400);
+        }
+    }
+
+    // MỞ RỘNG TẤT CẢ
+    function expandAllNodes() {
+        const allNodes = document.querySelectorAll('.tree-node');
+        allNodes.forEach(node => {
+            const children = node.querySelector('.children');
+            if (children) {
+                node.classList.add('expanded');
+                const toggleBtn = node.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.classList.add('expanded');
+                }
+                children.style.maxHeight = children.scrollHeight + 'px';
+                setTimeout(() => {
+                    children.style.maxHeight = 'none';
+                }, 100);
+            }
+        });
+        showNotification('Đã mở rộng toàn bộ sơ đồ');
+    }
+
+    // THU GỌN TẤT CẢ
+    function collapseAllNodes() {
+        const allNodes = document.querySelectorAll('.tree-node');
+        allNodes.forEach(node => {
+            const children = node.querySelector('.children');
+            if (children) {
+                node.classList.remove('expanded');
+                const toggleBtn = node.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('expanded');
+                    toggleBtn.classList.add('collapsed');
+                }
+                children.style.maxHeight = '0';
+            }
+        });
+        showNotification('Đã thu gọn sơ đồ');
+    }
+
+    // THIẾT LẬP LẠI VIEW MẶC ĐỊNH
+    function resetView() {
+        const allNodes = document.querySelectorAll('.tree-node');
+        allNodes.forEach(node => {
+            const level = parseInt(node.dataset.level) || 0;
+            const children = node.querySelector('.children');
+
+            if (children) {
+                if (level === 0) {
+                    // CEO mở rộng
+                    node.classList.add('expanded');
+                    const toggleBtn = node.querySelector('.toggle-btn');
+                    if (toggleBtn) {
+                        toggleBtn.classList.remove('collapsed');
+                        toggleBtn.classList.add('expanded');
+                    }
+                    children.style.maxHeight = children.scrollHeight + 'px';
+                    setTimeout(() => {
+                        children.style.maxHeight = 'none';
+                    }, 100);
+                } else {
+                    // Các node khác thu gọn
+                    node.classList.remove('expanded');
+                    const toggleBtn = node.querySelector('.toggle-btn');
+                    if (toggleBtn) {
+                        toggleBtn.classList.remove('expanded');
+                        toggleBtn.classList.add('collapsed');
+                    }
+                    children.style.maxHeight = '0';
+                }
+            }
+        });
+
+        clearHighlights();
+        closeDetailsPanel();
+        document.getElementById('searchInput').value = '';
+        showNotification('Đã thiết lập lại chế độ xem mặc định');
+    }
+
+    // XÓA HIGHLIGHT
+    function clearHighlights() {
+        document.querySelectorAll('.highlight').forEach(el => {
+            el.classList.remove('highlight');
+        });
+    }
+
+    // HIGHLIGHT NODE
+    function highlightNode(nodeElement) {
+        clearHighlights();
+        nodeElement.querySelector('.node-content').classList.add('highlight');
+
+        // Mở rộng các node cha để hiển thị node được chọn
+        let parent = nodeElement.parentElement.closest('.tree-node');
+        while (parent) {
+            parent.classList.add('expanded');
+            const children = parent.querySelector('.children');
+            if (children) {
+                children.style.maxHeight = children.scrollHeight + 'px';
+                setTimeout(() => {
+                    children.style.maxHeight = 'none';
+                }, 100);
+            }
+            const toggleBtn = parent.querySelector('.toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.classList.remove('collapsed');
+                toggleBtn.classList.add('expanded');
+            }
+            parent = parent.parentElement.closest('.tree-node');
+        }
+    }
+
+    // TÌM KIẾM NHÂN VIÊN
+    function searchNodes(query) {
+        clearHighlights();
+
+        if (!query.trim()) {
+            return;
+        }
+
+        const searchTerm = query.toLowerCase().trim();
+        const allNodes = document.querySelectorAll('.tree-node');
+        const matches = [];
+
+        allNodes.forEach(node => {
+            const name = node.dataset.name;
+            const id = node.dataset.id;
+            const position = node.dataset.position;
+
+            if (name.includes(searchTerm) || id.includes(searchTerm) || position.includes(searchTerm)) {
+                matches.push(node);
+            }
+        });
+
+        // Highlight tất cả kết quả tìm thấy
+        matches.forEach(node => {
+            node.querySelector('.node-content').classList.add('highlight');
+
+            // Mở rộng các node cha
+            let parent = node.parentElement.closest('.tree-node');
+            while (parent) {
+                parent.classList.add('expanded');
+                const children = parent.querySelector('.children');
+                if (children) {
+                    children.style.maxHeight = children.scrollHeight + 'px';
+                    setTimeout(() => {
+                        children.style.maxHeight = 'none';
+                    }, 100);
+                }
+                const toggleBtn = parent.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.classList.add('expanded');
+                }
+                parent = parent.parentElement.closest('.tree-node');
+            }
+        });
+
+        // Cuộn đến kết quả đầu tiên
+        if (matches.length > 0) {
+            matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showNotification(`Tìm thấy ${matches.length} kết quả`);
+        } else {
+            showNotification('Không tìm thấy kết quả');
+        }
+    }
+
+    // HIỂN THỊ CHI TIẾT NHÂN VIÊN
+    function showEmployeeDetails(employeeId) {
+        const employee = allEmployees.find(e => e.emp_id === employeeId);
+
+        if (!employee) return;
+
+        const detailsPanel = document.getElementById('employeeDetails');
+        const supervisor = allEmployees.find(e => e.emp_id === employee.supervisor_id);
+        const subordinates = allEmployees.filter(e => e.supervisor_id === employeeId);
+
+        detailsPanel.innerHTML = `
+            <div class="detail-header">
+                <div class="detail-avatar" style="width: 60px; height: 60px; border-radius: 15px; background: linear-gradient(45deg, #6a11cb, #2575fc); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: bold; margin-right: 1rem;">
+                    ${getInitials(employee.emp_name)}
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #333;">${employee.emp_name}</h4>
+                    <p style="margin: 0; color: #666; font-size: 0.9rem;">ID: ${employee.emp_id}</p>
+                </div>
+            </div>
+            <div class="detail-info" style="margin-top: 1.5rem;">
+                <div class="info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 600; color: #666;">Giới tính:</span>
+                    <span style="color: #333;">${employee.emp_sex}</span>
+                </div>
+                <div class="info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 600; color: #666;">Chức vụ:</span>
+                    <span style="color: #333;">${employee.emp_position}</span>
+                </div>
+                <div class="info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 600; color: #666;">Vị trí công việc:</span>
+                    <span style="color: #333;">${employee.job_position}</span>
+                </div>
+                <div class="info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid #eee;">
+                    <span style="font-weight: 600; color: #666;">Quản lý trực tiếp:</span>
+                    <span style="color: #333;">${supervisor ? supervisor.emp_name : 'Không có'}</span>
+                </div>
+                <div class="info-row" style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                    <span style="font-weight: 600; color: #666;">Số nhân viên quản lý:</span>
+                    <span style="color: #6a11cb; font-weight: bold;">${subordinates.length}</span>
+                </div>
+                <div style="margin-top: 1rem; text-align:right;">
+                    <a href="${employeeDetailsBaseUrl}?id=${employee.emp_id}"
+                       class="btn btn-outline-info btn-sm"
+                       title="Chi tiết">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            ${subordinates.length > 0 ? `
+            <div class="subordinates-list" style="margin-top: 1.5rem;">
+                <h5 style="color: #333; margin-bottom: 0.8rem;">Nhân viên quản lý:</h5>
+                <ul style="list-style: none; padding: 0;">
+                    ${subordinates.map(sub => `
+                        <li onclick="showEmployeeDetails('${sub.emp_id}')" style="cursor: pointer; padding: 0.6rem; margin-bottom: 0.5rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #6a11cb; transition: all 0.3s;">
+                            <div style="font-weight: 600; color: #333;">${sub.emp_name}</div>
+                            <div style="font-size: 0.85rem; color: #666;">${sub.emp_position}</div>
+                        </li>
+                    `).join('')}
+                </ul>
+
+            </div>` : ''}
+        `;
+
+        // Hiển thị panel
+        document.getElementById('detailsPanel').classList.add('active');
+    }
+
+    // ĐÓNG PANEL CHI TIẾT
+    function closeDetailsPanel() {
+        document.getElementById('detailsPanel').classList.remove('active');
+    }
+
+    // HIỂN THỊ NOTIFICATION
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
+    // HIỂN THỊ LOADING
+    function showLoading() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    // ẨN LOADING
+    function hideLoading() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // KHỞI TẠO EVENT LISTENERS
+    function initializeEventListeners() {
+        // Control buttons
+        document.getElementById('expandAll').addEventListener('click', expandAllNodes);
+        document.getElementById('collapseAll').addEventListener('click', collapseAllNodes);
+        document.getElementById('resetView').addEventListener('click', resetView);
+        document.getElementById('closePanel').addEventListener('click', closeDetailsPanel);
+
+        // Search
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchNodes(this.value);
+            }, 300);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+F để focus search
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+            // Escape để clear
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                clearHighlights();
+                closeDetailsPanel();
+            }
+        });
+    }
+        </script>
+    }
+</body>
+</html>
